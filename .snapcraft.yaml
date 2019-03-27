@@ -1,0 +1,107 @@
+name: php
+
+base: core18
+
+version: 'master'
+
+summary: The best PHP snap you can find.
+description: |
+  PHP, built for you by the Travis CI team.
+
+grade: devel
+confinement: devmode
+
+apps:
+  php:
+    command: bin/php
+  # composer:
+  #  command: bin/composer
+  # only if phar is installed
+  # phar:
+  #   command: bin/phar
+  # "phar.phar":
+  #   command: bin/phar.phar
+  # "php-cgi":
+  #   command: bin/php-cgi
+  # "php-config":
+  #   command: bin/php-config
+  phpdbg:
+    command: bin/phpdbg
+  phpize:
+    command: bin/phpize
+  # phpunit:
+  #  command: bin/phpunit
+
+parts:
+  libzip:
+    plugin: cmake
+    source: https://github.com/nih-at/libzip/archive/rel-1-5-2.tar.gz
+    source-type: tar
+    build-packages: [zlib1g-dev]
+  libsodium:
+    plugin: autotools
+    source: https://github.com/jedisct1/libsodium/releases/download/1.0.17/libsodium-1.0.17.tar.gz
+    source-type: tar
+  argon2:
+    plugin: make
+    source: https://github.com/P-H-C/phc-winner-argon2/archive/20171227.tar.gz
+    source-type: tar
+  icu:
+    plugin: autotools
+    source: http://download.icu-project.org/files/icu4c/60.2/icu4c-60_2-src.tgz
+    source-type: tar
+    source-subdir: source
+    build-packages: [g++]
+    stage-packages: [libgraphite2-3, libfreetype6, libpng16-16]
+  php:
+    plugin: nil
+    source: . 
+    override-build: |
+      snapcraftctl build
+
+      git clone https://github.com/php-build/php-build.git
+
+      cp default_configure_options.bionic php-build/share/php-build/default_configure_options
+
+      echo "--with-libzip=$SNAPCRAFT_STAGE" >> php-build/share/php-build/default_configure_options
+      echo "--with-sodium=$SNAPCRAFT_STAGE" >> php-build/share/php-build/default_configure_options
+      echo "--with-icu-dir=$SNAPCRAFT_STAGE" >> php-build/share/php-build/default_configure_options
+      echo "--with-password-argon2=$SNAPCRAFT_STAGE/usr" >> php-build/share/php-build/default_configure_options
+
+      cat php-build/share/php-build/default_configure_options
+
+      ./php-build/bin/php-build -i development "master" "${SNAPCRAFT_PART_INSTALL}"
+
+    after: [icu, libsodium, argon2, libzip]
+    build-packages:
+    - git
+    - bison
+    - re2c
+    - libxml2-dev
+    - libssl-dev
+    - libsqlite3-dev
+    - libbz2-dev
+    - libcurl4-openssl-dev
+    - libgmp3-dev
+    - libc-client-dev
+    - libkrb5-dev
+    - libldap2-dev
+    - libsasl2-dev
+    - libonig-dev
+    - libpq-dev
+    - libreadline-dev
+    - libjpeg-dev
+    - libpng-dev
+    - libtidy-dev
+    - libxslt1-dev
+    stage-packages:
+    - re2c
+    - libxml2
+    - openssl
+    - libxslt1.1
+    - libsasl2-2
+    - libpq5
+    - libcurl4
+    - libonig4
+    - libc-client2007e
+    - libtidy5
