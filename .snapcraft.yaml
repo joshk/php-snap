@@ -38,24 +38,29 @@ parts:
     source: https://github.com/nih-at/libzip/archive/rel-1-5-2.tar.gz
     source-type: tar
     build-packages: [zlib1g-dev]
+
   libsodium:
     plugin: autotools
     source: https://github.com/jedisct1/libsodium/releases/download/1.0.17/libsodium-1.0.17.tar.gz
     source-type: tar
+
   argon2:
     plugin: make
     source: https://github.com/P-H-C/phc-winner-argon2/archive/20171227.tar.gz
     source-type: tar
+
   icu:
     plugin: autotools
     source: http://download.icu-project.org/files/icu4c/60.2/icu4c-60_2-src.tgz
     source-type: tar
     source-subdir: source
     build-packages: [g++]
-    stage-packages: [libgraphite2-3, libfreetype6, libpng16-16]
+    stage-packages: [libgraphite2-3, libfreetype6, libpng16-16, libharfbuzz-bin]
+
   php:
     plugin: nil
-    source: . 
+    source: . # https://github.com/php-build/php-build.git
+    # source-type: git
     override-build: |
       snapcraftctl build
 
@@ -105,3 +110,25 @@ parts:
     - libonig4
     - libc-client2007e
     - libtidy5
+
+  composer:
+    plugin: nil
+    source: .
+    override-build: |
+      snapcraftctl build
+
+      curl -fsSL -o $SNAPCRAFT_INSTALL/bin/composer https://getcomposer.org/composer.phar
+
+      chmod +x $SNAPCRAFT_INSTALL/bin/composer
+    after: [php]
+
+  phpunit:
+    plugin: nil
+    source: .
+    override-build: |
+      snapcraftctl build
+
+      curl -fsSL -o $SNAPCRAFT_INSTALL/bin/phpunit https://phar.phpunit.de/phpunit.phar
+
+      chmod +x $SNAPCRAFT_INSTALL/bin/phpunit
+    after: [php]
